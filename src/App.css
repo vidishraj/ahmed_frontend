@@ -1,0 +1,47 @@
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-lightest);
+}
+
+header, footer {
+  background: var(--color-darkest);
+  color: var(--color-lightest);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--color-lightest);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-nav, .footer-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.header-nav a, .footer-nav a {
+  color: var(--color-lightest);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.header-nav a:hover, .footer-nav a:hover {
+  color: var(--color-light);
+}
+
+main {
+  flex: 1;
+  padding: 2rem;
+  background: var(--color-lightest);
+}

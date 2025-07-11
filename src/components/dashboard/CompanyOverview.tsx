@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Typography, Paper, Stack, Card, CardContent, Chip } from '@mui/material';
+import { Box, Typography, Paper, Stack, Card, CardContent } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter
+  ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 
 interface CompanyOverviewProps {
@@ -140,7 +140,7 @@ const CompanyOverview: React.FC<CompanyOverviewProps> = ({ data }) => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, value, percent }) => `${name}: ${((percent || 0) * 100).toFixed(1)}%`}
+                        label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(1)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"

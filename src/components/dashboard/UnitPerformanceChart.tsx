@@ -102,7 +102,7 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
     }));
 
   // Modern color palette for performance
-  const COLORS = ['#1976d2', '#388e3c', '#f57c00', '#d32f2f', '#7b1fa2', '#00796b'];
+  // const COLORS = ['#1976d2', '#388e3c', '#f57c00', '#d32f2f', '#7b1fa2', '#00796b'];
 
   return (
     <Box>

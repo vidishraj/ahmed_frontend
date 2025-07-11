@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Paper, Stack, Card, CardContent } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell
+  ResponsiveContainer, ScatterChart, Scatter
 } from 'recharts';
 
 interface PollutantChartProps {
@@ -28,10 +28,10 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
   }
 
   // Filter data with valid emissions data
-  const emissionsData = safeData.filter(unit => 
-    unit.env_load_pm !== null || unit.env_load_so2 !== null || 
-    unit.env_load_no2 !== null || unit.env_load_co2 !== null
-  );
+  // const emissionsData = safeData.filter(unit => 
+  //   unit.env_load_pm !== null || unit.env_load_so2 !== null || 
+  //   unit.env_load_no2 !== null || unit.env_load_co2 !== null
+  // );
 
   // Total emissions by unit (Environmental load data)
   const totalEmissionsData = safeData
@@ -88,20 +88,20 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
     .filter(unit => unit.intensity > 0);
 
   // Concentration vs Environmental Load analysis
-  const concentrationAnalysis = emissionsData
-    .filter(unit => unit.pm_concentration_mg_per_Nm3 > 0 && unit.env_load_pm > 0)
-    .slice(0, 10)
-    .map(unit => ({
-      unit: `${unit.plant_name} - ${unit.unit_name}`.length > 15 
-        ? `${unit.plant_name} - ${unit.unit_name}`.substring(0, 15) + '...'
-        : `${unit.plant_name} - ${unit.unit_name}`,
-      pm_concentration: unit.pm_concentration_mg_per_Nm3,
-      so2_concentration: unit.so2_concentration_mg_per_Nm3 || 0,
-      no2_concentration: unit.no2_concentration_mg_per_Nm3 || 0,
-      pm_load: unit.env_load_pm,
-      so2_load: unit.env_load_so2 || 0,
-      no2_load: unit.env_load_no2 || 0
-    }));
+  // const concentrationAnalysis = emissionsData
+  //   .filter(unit => unit.pm_concentration_mg_per_Nm3 > 0 && unit.env_load_pm > 0)
+  //   .slice(0, 10)
+  //   .map(unit => ({
+  //     unit: `${unit.plant_name} - ${unit.unit_name}`.length > 15 
+  //       ? `${unit.plant_name} - ${unit.unit_name}`.substring(0, 15) + '...'
+  //       : `${unit.plant_name} - ${unit.unit_name}`,
+  //     pm_concentration: unit.pm_concentration_mg_per_Nm3,
+  //     so2_concentration: unit.so2_concentration_mg_per_Nm3 || 0,
+  //     no2_concentration: unit.no2_concentration_mg_per_Nm3 || 0,
+  //     pm_load: unit.env_load_pm,
+  //     so2_load: unit.env_load_so2 || 0,
+  //     no2_load: unit.env_load_no2 || 0
+  //   }));
 
   // Calculate summary statistics
   const totalSO2 = safeData.reduce((sum, item) => sum + (item.so2_emissions_intensity || 0), 0);
@@ -109,7 +109,7 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
   const totalPM = safeData.reduce((sum, item) => sum + (item.pm_emissions_intensity || 0), 0);
 
   // Modern color palette for emissions
-  const COLORS = ['#d32f2f', '#f57c00', '#388e3c', '#1976d2', '#7b1fa2', '#00796b'];
+  // const COLORS = ['#d32f2f', '#f57c00', '#388e3c', '#1976d2', '#7b1fa2', '#00796b'];
 
   return (
     <Box>

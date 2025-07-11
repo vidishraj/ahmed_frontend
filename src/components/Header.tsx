@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import '../App.css';
+import logo from '../assets/logo.jpeg'; // adjust path if needed
 
 interface NavLink {
   to: string;
@@ -33,7 +34,7 @@ const Header: React.FC = () => {
   return (
     <header>
       <div className="header-logo">
-        <img src="/src/assets/logo.jpeg" alt="Logo" style={{ height: 32, borderRadius: '50%' }} />
+        <img src={logo} alt="Logo" style={{ height: 32, borderRadius: '50%' }} />
         NCEC-DOE
       </div>
       <nav className="header-nav">

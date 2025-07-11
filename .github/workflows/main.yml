@@ -21,8 +21,12 @@ jobs:
     - name: Pull latest changes and restart service
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm use node  # or specific version like `nvm use 18`
+          
           cd /home/ubuntu/ahmed_frontend
-          sudo git pull
+          git pull
           npm i
           npm run build
           sudo rm -r /var/www/ncec-frontend/

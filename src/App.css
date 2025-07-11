@@ -42,6 +42,6 @@ header, footer {
 
 main {
   flex: 1;
-  padding: 2rem;
+  padding: 0rem;
   background: var(--color-lightest);
 }

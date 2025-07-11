@@ -24,6 +24,7 @@ export async function apiRequest<T = any>(
       ...options,
       headers,
     });
+    console.log(res)
     return res.data;
   } catch (err: any) {
     let errorMsg = 'API request failed';
@@ -60,4 +61,49 @@ export async function uploadFile(
     }
     throw new Error(errorMsg);
   }
-} 
+}
+
+export async function fetchPlantLocations(token?: string) {
+  return apiRequest('/api/plants/geospatial/', { method: 'GET' }, token);
+}
+
+export async function fetchUnitMapData(token?: string) {
+  return apiRequest('/api/units/map/', { method: 'GET' }, token);
+}
+
+export const fetchKPIList = async (
+  page: number,
+  pageSize: number,
+  token: string,
+  sortField?: string,
+  sortOrder?: string,
+  filterModel?: any
+) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  if (sortField) {
+    params.append('sortField', sortField);
+  }
+  if (sortOrder) {
+    params.append('sortOrder', sortOrder);
+  }
+  if (filterModel) {
+    params.append('filterModel', JSON.stringify(filterModel));
+  }
+
+  const response = await fetch(`${BASE_URL}/api/units/kpi-list/?${params.toString()}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch KPI data');
+  }
+
+  return response.json();
+}; 

@@ -34,7 +34,7 @@ const Header: React.FC = () => {
     <header>
       <div className="header-logo">
         <img src="/src/assets/logo.jpeg" alt="Logo" style={{ height: 32, borderRadius: '50%' }} />
-        NCEC-DOA
+        NCEC-DOE
       </div>
       <nav className="header-nav">
         {navLinks.filter(link => link.show).map((link) =>

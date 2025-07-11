@@ -93,15 +93,14 @@ const Dashboard: React.FC = () => {
   const [techFilter, setTechFilter] = useState('');
 
   // Table state
-  const [kpiRows, setKpiRows] = useState<any[]>([]);
-  const [kpiLoading, setKpiLoading] = useState(false);
+  const [_, setKpiRows] = useState<any[]>([]);
+  const [_1, setKpiLoading] = useState(false);
   const [kpiError, setKpiError] = useState('');
-  const [kpiPage, setKpiPage] = useState(1);
   const [kpiPageSize] = useState(100); // Increased page size for better UX
   const [kpiTotal, setKpiTotal] = useState(0);
-  const [lastRow, setLastRow] = useState<number | undefined>(undefined);
-  const [sortModel, setSortModel] = useState<any>(null);
-  const [filterModel, setFilterModel] = useState<any>(null);
+  const [_3, setLastRow] = useState<number | undefined>(undefined);
+  const [_4, setSortModel] = useState<any>(null);
+  const [_5, setFilterModel] = useState<any>(null);
 
   // Fetch KPI data
   const fetchKPIs = useCallback(async (
@@ -422,17 +421,12 @@ const Dashboard: React.FC = () => {
     technology: tech,
     total_generation: sumBy(items, 'annual_generation_mwh'),
   }));
-  const companyGenData = Object.entries(groupBy(filteredDiagramData, 'company')).map(([company, items]) => ({
-    company,
-    total_generation: sumBy(items, 'annual_generation_mwh'),
-  }));
   const yearTrendData = Object.entries(groupBy(filteredDiagramData, 'year')).map(([year, items]) => ({
     year,
     total_generation: sumBy(items, 'annual_generation_mwh'),
     avg_emissions: sumBy(items, 'so2_emissions_intensity') / (items.length || 1),
   }));
   const techPieData = techGenData.map(d => ({ name: d.technology, value: d.total_generation }));
-  const regionPieData = regionGenData.map(d => ({ name: d.region, value: d.total_generation }));
 
   const agGridCustomStyles = `
 .ag-theme-alpine.custom-aggrid {

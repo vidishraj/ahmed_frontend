@@ -8,6 +8,13 @@ import 'leaflet.markercluster/dist/leaflet.markercluster.js';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
+import CompanyOverview from '../components/dashboard/CompanyOverview';
+import EnvironmentalMonitoring from '../components/dashboard/EnvironmentalMonitoring';
+import PollutantChart from '../components/dashboard/PollutantChart';
+import UnitPerformanceChart from '../components/dashboard/UnitPerformanceChart';
+import WaterWasteChart from '../components/dashboard/WaterWasteChart';
+import SummaryTab from '../components/dashboard/SummaryTab';
+import { Box, Paper, Stack, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -22,7 +29,7 @@ import type {
 } from 'ag-grid-community';
 
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter,
 } from 'recharts';
 
 const MAP_HEIGHT = '400px';
@@ -47,16 +54,23 @@ const unitIcon = new L.Icon({
 });
 
 const TABS = [
-  { key: 'tabular', label: 'Tabular' },
-  { key: 'diagramatic', label: 'Diagramatic' },
-  { key: 'map', label: 'Map' },
-];
+  { key: 'tabular', label: 'Grid View' },
+  { key: 'diagramatic', label: 'Diagrams' },
+  { key: 'summary', label: 'Summary' },
+  { key: 'map', label: 'Map View' },
+] as const;
+
+type TabType = typeof TABS[number]['key'];
 
 interface KPIRow {
   plant_id: number;
   plant_name: string;
   unit_id: number;
   unit_name: string;
+  technology_type: string | null;
+  region: string | null;
+  city: string | null;
+  year_operation_started: number | null;
   primary_fuel_energy: number | null;
   unit_efficiency: number | null;
   capacity_factor: number | null;
@@ -81,7 +95,7 @@ interface KPIRow {
 
 const Dashboard: React.FC = () => {
   const { firebaseUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('tabular');
+  const [activeTab, setActiveTab] = useState<TabType>('tabular');
 
   // Map state
   const [plants, setPlants] = useState<any[]>([]);
@@ -92,53 +106,32 @@ const Dashboard: React.FC = () => {
   const [regionFilter, setRegionFilter] = useState('');
   const [techFilter, setTechFilter] = useState('');
 
-  // Table state
-  const [_, setKpiRows] = useState<any[]>([]);
-  const [_1, setKpiLoading] = useState(false);
-  const [kpiError, setKpiError] = useState('');
-  const [kpiPageSize] = useState(100); // Increased page size for better UX
-  const [kpiTotal, setKpiTotal] = useState(0);
-  const [_3, setLastRow] = useState<number | undefined>(undefined);
-  const [_4, setSortModel] = useState<any>(null);
-  const [_5, setFilterModel] = useState<any>(null);
+  // Diagrammatic tab state
+  const [diagramCompany, setDiagramCompany] = useState('');
+  const [diagramRegion, setDiagramRegion] = useState('');
+  const [diagramCity, setDiagramCity] = useState('');
+  const [diagramTech, setDiagramTech] = useState('');
+  const [diagramYear, setDiagramYear] = useState('');
+  const [diagramData, setDiagramData] = useState<any[]>([]);
+  const [diagramLoading, setDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState('');
+  const [environmentalData, setEnvironmentalData] = useState<any[]>([]);
+  const [emergencyData, setEmergencyData] = useState<any[]>([]);
+  const [waterWasteData, setWaterWasteData] = useState<any[]>([]);
+  const [wasteData, setWasteData] = useState<any[]>([]);
 
-  // Fetch KPI data
-  const fetchKPIs = useCallback(async (
-    page: number,
-    sortField?: string,
-    sortOrder?: string,
-    filters?: any,
-    append: boolean = false
-  ) => {
-    if (!firebaseUser) return;
-    setKpiLoading(true);
-    setKpiError('');
-    try {
-      const token = await firebaseUser.getIdToken();
-      const data = await fetchKPIList(page, kpiPageSize, token, sortField, sortOrder, filters);
-      
-      setKpiRows(prev => append ? [...prev, ...data.results] : data.results);
-      setKpiTotal(data.count);
-      setLastRow(data.count);
-    } catch (err: any) {
-      setKpiError(err.message || 'Failed to fetch KPI data');
-    } finally {
-      setKpiLoading(false);
-    }
-  }, [firebaseUser, kpiPageSize]);
-
-  // Initial load
+  // Initial load - simplified
   useEffect(() => {
     if (activeTab === 'tabular') {
-      fetchKPIs(1);
+      // Initial table load if needed
     }
-  }, [activeTab, fetchKPIs]);
+  }, [activeTab]);
 
   // ag-Grid datasource
   const dataSource: IDatasource = {
     getRows: async (params: IGetRowsParams) => {
       // Calculate the page number based on startRow
-      const page = Math.floor(params.startRow / kpiPageSize) + 1;
+      const page = Math.floor(params.startRow / 100) + 1;
       
       // Get sort model
       const sortModel = params.sortModel[0] as SortModelItem | undefined;
@@ -152,7 +145,7 @@ const Dashboard: React.FC = () => {
         const token = await firebaseUser?.getIdToken();
         if (!token) throw new Error('Not authenticated');
         
-        const data = await fetchKPIList(page, kpiPageSize, token, sortField, sortOrder, filterModel);
+        const data = await fetchKPIList(page, 100, token, sortField, sortOrder, filterModel);
         
         // Update total rows
         const totalRows = data.count;
@@ -341,30 +334,26 @@ const Dashboard: React.FC = () => {
   const regions = Array.from(new Set([...plants.map(p => p.region), ...units.map(u => u.region)].filter(Boolean)));
   const techs = Array.from(new Set(units.map(u => u.technology_type).filter(Boolean)));
 
-  // Diagrammatic tab state
-  const [diagramCompany, setDiagramCompany] = useState('');
-  const [diagramPlant, setDiagramPlant] = useState('');
-  const [diagramRegion, setDiagramRegion] = useState('');
-  const [diagramCity, setDiagramCity] = useState('');
-  const [diagramTech, setDiagramTech] = useState('');
-  const [diagramYear, setDiagramYear] = useState('');
-  const [diagramData, setDiagramData] = useState<any[]>([]);
-  const [diagramLoading, setDiagramLoading] = useState(false);
-  const [diagramError, setDiagramError] = useState('');
-  const [diagramRetirementYear, setDiagramRetirementYear] = useState('');
-  const [diagramDevice, setDiagramDevice] = useState('');
-
-  // Fetch KPI data for diagrams
+  // Fetch diagram data
   const fetchDiagramData = useCallback(async () => {
     if (!firebaseUser) return;
     setDiagramLoading(true);
     setDiagramError('');
     try {
       const token = await firebaseUser.getIdToken();
-      const data = await fetchKPIList(1, 1000, token);
-      setDiagramData(data.results);
+      
+      // Only fetch KPI data since all charts now use this data
+      const kpiData = await fetchKPIList(1, 1000, token);
+      setDiagramData(kpiData.results);
+      
+      // Set empty arrays for other data that aren't being used meaningfully
+      setEnvironmentalData([]);
+      setEmergencyData([]);
+      setWaterWasteData([]);
+      setWasteData([]);
     } catch (err: any) {
       setDiagramError(err.message || 'Failed to fetch diagram data');
+      console.error('Error fetching diagram data:', err);
     } finally {
       setDiagramLoading(false);
     }
@@ -376,57 +365,21 @@ const Dashboard: React.FC = () => {
     }
   }, [activeTab, fetchDiagramData]);
 
-  // Filtered data for diagrams
+  // Filtered data for diagrams - Fixed to use actual available options
   const filteredDiagramData = diagramData.filter(row =>
-    (!diagramCompany || row.company === diagramCompany) &&
-    (!diagramPlant || row.plant_name === diagramPlant) &&
+    (!diagramCompany || row.plant_name === diagramCompany) &&
     (!diagramRegion || row.region === diagramRegion) &&
     (!diagramCity || row.city === diagramCity) &&
     (!diagramTech || row.technology_type === diagramTech) &&
-    (!diagramYear || (row.year && row.year.toString() === diagramYear)) &&
-    (!diagramRetirementYear || (row.retirement_year && row.retirement_year.toString() === diagramRetirementYear)) &&
-    (!diagramDevice || row.primary_device === diagramDevice)
+    (!diagramYear || (row.year_operation_started && row.year_operation_started.toString() === diagramYear))
   );
-  const diagramRetirementYears = Array.from(new Set(diagramData.map(r => r.retirement_year).filter(Boolean)));
-  const diagramDevices = Array.from(new Set(diagramData.map(r => r.primary_device).filter(Boolean)));
 
-  // Unique filter options
-  const diagramCompanies = Array.from(new Set(diagramData.map(r => r.company).filter(Boolean)));
-  const diagramPlants = Array.from(new Set(diagramData.map(r => r.plant_name).filter(Boolean)));
+  // Get unique filter options from actual KPI data
+  const diagramCompanies = Array.from(new Set(diagramData.map(r => r.plant_name).filter(Boolean)));
   const diagramRegions = Array.from(new Set(diagramData.map(r => r.region).filter(Boolean)));
   const diagramCities = Array.from(new Set(diagramData.map(r => r.city).filter(Boolean)));
   const diagramTechs = Array.from(new Set(diagramData.map(r => r.technology_type).filter(Boolean)));
-  const diagramYears = Array.from(new Set(diagramData.map(r => r.year).filter(Boolean)));
-
-  // Chart colors
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28BFE', '#FF6699', '#33CC99', '#FF6666'];
-
-  // Data aggregation helpers
-  const groupBy = (arr: any[], key: string): Record<string, any[]> => {
-    return arr.reduce((acc: Record<string, any[]>, item: any) => {
-      const k = item[key] || 'Unknown';
-      acc[k] = acc[k] || [];
-      acc[k].push(item);
-      return acc;
-    }, {});
-  };
-  const sumBy = (arr: any[], key: string) => arr.reduce((sum: number, item: any) => sum + (item[key] || 0), 0);
-
-  // Chart data
-  const regionGenData = Object.entries(groupBy(filteredDiagramData, 'region')).map(([region, items]) => ({
-    region,
-    total_generation: sumBy(items, 'annual_generation_mwh'),
-  }));
-  const techGenData = Object.entries(groupBy(filteredDiagramData, 'technology_type')).map(([tech, items]) => ({
-    technology: tech,
-    total_generation: sumBy(items, 'annual_generation_mwh'),
-  }));
-  const yearTrendData = Object.entries(groupBy(filteredDiagramData, 'year')).map(([year, items]) => ({
-    year,
-    total_generation: sumBy(items, 'annual_generation_mwh'),
-    avg_emissions: sumBy(items, 'so2_emissions_intensity') / (items.length || 1),
-  }));
-  const techPieData = techGenData.map(d => ({ name: d.technology, value: d.total_generation }));
+  const diagramYears = Array.from(new Set(diagramData.map(r => r.year_operation_started).filter(Boolean)));
 
   const agGridCustomStyles = `
 .ag-theme-alpine.custom-aggrid {
@@ -477,7 +430,7 @@ const Dashboard: React.FC = () => {
         {TABS.map(tab => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => setActiveTab(tab.key as TabType)}
             style={{
               padding: '10px 24px',
               borderRadius: 8,
@@ -500,7 +453,7 @@ const Dashboard: React.FC = () => {
       {activeTab === 'tabular' && (
         <div style={{ background: 'var(--color-light)', borderRadius: 8, padding: 24 }}>
           <h2 style={{ marginBottom: 16 }}>KPI Table</h2>
-          {kpiError && <div style={{ color: 'red' }}>{kpiError}</div>}
+          {/* {kpiError && <div style={{ color: 'red' }}>{kpiError}</div>} */}
           <div
             className="ag-theme-alpine custom-aggrid"
             style={{
@@ -534,251 +487,323 @@ const Dashboard: React.FC = () => {
               rowHeight={44}
               rowSelection="single"
               animateRows={true}
-              cacheBlockSize={kpiPageSize}
+              cacheBlockSize={100}
               infiniteInitialRowCount={1}
               maxBlocksInCache={10}
               onFilterChanged={(params) => {
-                setFilterModel(params.api.getFilterModel());
+                // setFilterModel(params.api.getFilterModel()); // This line was removed
                 params.api.refreshInfiniteCache();
               }}
               onSortChanged={(params) => {
                 const api = params.api as GridApi<KPIRow>;
-                const sortModel = api.getColumnState()
-                  .filter(col => col.sort)
-                  .map(col => ({
-                    colId: col.colId,
-                    sort: col.sort
-                  }));
-                setSortModel(sortModel);
+                // Sort functionality removed - keeping for ag-grid compatibility
                 api.refreshInfiniteCache();
               }}
             />
           </div>
-          <div style={{ textAlign: 'right', marginTop: 8, color: '#666' }}>
+          {/* <div style={{ textAlign: 'right', marginTop: 8, color: '#666' }}>
             Total Records: {kpiTotal}
-          </div>
+          </div> */}
         </div>
       )}
+      
+      {activeTab === 'summary' && <SummaryTab />}
+      
       {activeTab === 'diagramatic' && (
-        <div style={{ background: 'var(--color-light)', borderRadius: 8, padding: 24, minHeight: 400 }}>
-          <h2 style={{ marginBottom: 16 }}>Diagramatic View</h2>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-            <select value={diagramCompany} onChange={e => setDiagramCompany(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Companies</option>
-              {diagramCompanies.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select value={diagramPlant} onChange={e => setDiagramPlant(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Plants</option>
-              {diagramPlants.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select value={diagramRegion} onChange={e => setDiagramRegion(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Regions</option>
-              {diagramRegions.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-            <select value={diagramCity} onChange={e => setDiagramCity(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Cities</option>
-              {diagramCities.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select value={diagramTech} onChange={e => setDiagramTech(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Technologies</option>
-              {diagramTechs.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select value={diagramYear} onChange={e => setDiagramYear(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Years</option>
-              {diagramYears.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <select value={diagramRetirementYear} onChange={e => setDiagramRetirementYear(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Retirement Years</option>
-              {diagramRetirementYears.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <select value={diagramDevice} onChange={e => setDiagramDevice(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Devices</option>
-              {diagramDevices.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          {diagramLoading && <div>Loading diagrams...</div>}
-          {diagramError && <div style={{ color: 'red' }}>{diagramError}</div>}
-          {filteredDiagramData.length === 0 ? (
-            <div style={{ color: '#888', textAlign: 'center', margin: 40 }}>No data available for selected filters.</div>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32 }}>
-              {/* Bar: Generation by Region */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Generation by Region</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={regionGenData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="region" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="total_generation" fill="#0088FE" name="Generation (MWh)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Pie: Technology Type Share */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Generation Share by Technology</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={techPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                      {techPieData.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Line: Generation Trend by Year */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Generation Trend by Year</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={yearTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="total_generation" stroke="#0088FE" name="Generation (MWh)" />
-                    <Line type="monotone" dataKey="avg_emissions" stroke="#FF8042" name="Avg SO2 Emissions" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Scatter: Age vs Efficiency */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Age vs Efficiency</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <ScatterChart>
-                    <CartesianGrid />
-                    <XAxis dataKey="unit_age" name="Age" />
-                    <YAxis dataKey="unit_efficiency" name="Efficiency (%)" />
-                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                    <Scatter name="Units" data={filteredDiagramData} fill="#00C49F" />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Stacked Bar: Emissions by Plant */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Emissions by Plant</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={Object.entries(groupBy(filteredDiagramData, 'plant_name')).map(([plant, arr]) => {
-                    return {
-                      plant,
-                      so2: sumBy(arr, 'so2_emissions_intensity'),
-                      nox: sumBy(arr, 'nox_emissions_intensity'),
-                      pm10: sumBy(arr, 'pm10_emissions_intensity'),
-                      co: sumBy(arr, 'co_emissions_intensity'),
-                    };
-                  })}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="plant" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="so2" stackId="a" fill="#FF8042" name="SO2" />
-                    <Bar dataKey="nox" stackId="a" fill="#A28BFE" name="NOx" />
-                    <Bar dataKey="pm10" stackId="a" fill="#FFBB28" name="PM10" />
-                    <Bar dataKey="co" stackId="a" fill="#FF6699" name="CO" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Histogram: Age distribution */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Unit Age Distribution</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={(() => {
-                    const ageBins: Record<string, number> = {};
-                    filteredDiagramData.forEach(row => {
-                      const age = row.unit_age || 0;
-                      const bin = `${Math.floor(age / 5) * 5}-${Math.floor(age / 5) * 5 + 4}`;
-                      ageBins[bin] = (ageBins[bin] || 0) + 1;
-                    });
-                    return Object.entries(ageBins).map(([bin, count]) => ({ bin, count }));
-                  })()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="bin" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#00C49F" name="Units" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Water Use by Plant */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Water Use by Plant</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={Object.entries(groupBy(filteredDiagramData, 'plant_name')).map(([plant, arr]) => {
-                    return {
-                      plant,
-                      water: sumBy(arr, 'total_water_tons_per_year'),
-                    };
-                  })}>
-                    <XAxis dataKey="plant" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="water" fill="#00C49F" name="Water Use (tons/year)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Emissions by Control Device */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>SO2 Emissions by Control Device</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={Object.entries(groupBy(filteredDiagramData, 'primary_device')).map(([device, arr]) => {
-                      return {
-                        name: device,
-                        value: sumBy(arr, 'so2_emissions_intensity'),
-                      };
-                    })} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                      {diagramDevices.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Stacked Bar: Waste Handling by Plant */}
-              <div style={{ flex: 1, minWidth: 400, height: 320 }}>
-                <h4>Waste Handling by Plant</h4>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={Object.entries(groupBy(filteredDiagramData, 'plant_name')).map(([plant, arr]) => {
-                    return {
-                      plant,
-                      reuse: sumBy(arr, 'reuse_quantity_kg_per_year'),
-                      dump: sumBy(arr, 'dumping_quantity_kg_per_year'),
-                    };
-                  })}>
-                    <XAxis dataKey="plant" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="reuse" stackId="a" fill="#00C49F" name="Reuse (kg/year)" />
-                    <Bar dataKey="dump" stackId="a" fill="#FF8042" name="Dump (kg/year)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+        <Box sx={{ background: 'var(--color-light)', borderRadius: 2, p: 3, minHeight: 400 }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
+              Environmental Performance Dashboard
+            </Typography>
+            
+            {/* Filters Section */}
+            <Paper sx={{ p: 2, mb: 3, bgcolor: '#f8f9fa', borderRadius: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#333' }}>Filters</Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} flexWrap="wrap">
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Company</InputLabel>
+                  <Select
+                    value={diagramCompany}
+                    label="Company"
+                    onChange={(e) => setDiagramCompany(e.target.value)}
+                  >
+                    <MenuItem value="">All Companies</MenuItem>
+                    {diagramCompanies.map(c => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Region</InputLabel>
+                  <Select
+                    value={diagramRegion}
+                    label="Region"
+                    onChange={(e) => setDiagramRegion(e.target.value)}
+                  >
+                    <MenuItem value="">All Regions</MenuItem>
+                    {diagramRegions.map(r => (
+                      <MenuItem key={r} value={r}>{r}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>City</InputLabel>
+                  <Select
+                    value={diagramCity}
+                    label="City"
+                    onChange={(e) => setDiagramCity(e.target.value)}
+                  >
+                    <MenuItem value="">All Cities</MenuItem>
+                    {diagramCities.map(c => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Technology</InputLabel>
+                  <Select
+                    value={diagramTech}
+                    label="Technology"
+                    onChange={(e) => setDiagramTech(e.target.value)}
+                  >
+                    <MenuItem value="">All Technologies</MenuItem>
+                    {diagramTechs.map(t => (
+                      <MenuItem key={t} value={t}>{t}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Operation Year</InputLabel>
+                  <Select
+                    value={diagramYear}
+                    label="Operation Year"
+                    onChange={(e) => setDiagramYear(e.target.value)}
+                  >
+                    <MenuItem value="">All Years</MenuItem>
+                    {diagramYears.map(y => (
+                      <MenuItem key={y} value={y}>{y}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            </Paper>
+          </Box>
+
+          {diagramLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <Typography>Loading diagrams...</Typography>
+            </Box>
           )}
-        </div>
+          
+          {diagramError && (
+            <Box sx={{ color: 'error.main', p: 2, borderRadius: 1 }}>
+              <Typography>{diagramError}</Typography>
+            </Box>
+          )}
+
+          {!diagramLoading && !diagramError && filteredDiagramData.length === 0 ? (
+            <Box sx={{ textAlign: 'center', p: 4 }}>
+              <Typography color="text.secondary">No data available for selected filters.</Typography>
+            </Box>
+          ) : (
+            <Stack spacing={3}>
+              {/* Company Overview Section - Now using KPI data */}
+              <CompanyOverview data={filteredDiagramData} />
+
+              {/* Environmental and Unit Performance Row */}
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ alignItems: 'stretch' }}>
+                {/* Unit Performance Section - Now using KPI data */}
+                <Box sx={{ flex: 1 }}>
+                  <UnitPerformanceChart data={filteredDiagramData} />
+                </Box>
+
+                {/* Pollutant Chart Section - Now using KPI data */}
+                <Box sx={{ flex: 1 }}>
+                  <PollutantChart data={filteredDiagramData} />
+                </Box>
+              </Stack>
+
+              {/* Environmental Monitoring Section - Only show if data exists */}
+              {(environmentalData.length > 0 || emergencyData.length > 0) && (
+                <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 2, p: 2 }}>
+                  <EnvironmentalMonitoring 
+                    noiseData={environmentalData} 
+                    emergencyData={emergencyData} 
+                  />
+                </Box>
+              )}
+
+              {/* Water and Waste Section - Only show if data exists */}
+              {(waterWasteData.length > 0 || wasteData.length > 0) && (
+                <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 2, p: 2 }}>
+                  <WaterWasteChart 
+                    waterData={waterWasteData}
+                    wasteData={wasteData}
+                  />
+                </Box>
+              )}
+
+              {/* Performance & Efficiency Analysis Section */}
+              <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 2, p: 3 }}>
+                <Typography variant="h6" sx={{ mb: 3, color: '#333', fontWeight: 600 }}>
+                  Performance & Efficiency Analysis
+                </Typography>
+                <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ alignItems: 'stretch' }}>
+                  {/* Fuel Consumption Analysis */}
+                  <Box sx={{ flex: 1 }}>
+                    <Paper sx={{ p: 3, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
+                        Fuel Consumption vs Generation
+                      </Typography>
+                      <Box sx={{ height: 350 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={filteredDiagramData.slice(0, 10).map(item => ({
+                              plant: item.plant_name?.length > 15 ? item.plant_name.substring(0, 15) + '...' : item.plant_name,
+                              fuel_consumption: item.annual_fuel_consumption_m3 || 0,
+                              generation: item.annual_generation_mwh || 0
+                            }))}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis 
+                              dataKey="plant" 
+                              angle={-45} 
+                              textAnchor="end" 
+                              height={100}
+                              fontSize={11}
+                              stroke="#666"
+                            />
+                            <YAxis yAxisId="left" stroke="#666" fontSize={12} />
+                            <YAxis yAxisId="right" orientation="right" stroke="#666" fontSize={12} />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: '#fff', 
+                                border: '1px solid #ddd',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                              }} 
+                            />
+                            <Legend />
+                            <Bar yAxisId="left" dataKey="fuel_consumption" fill="#0088FE" name="Fuel Consumption (m³)" radius={[2, 2, 0, 0]} />
+                            <Bar yAxisId="right" dataKey="generation" fill="#00C49F" name="Generation (MWh)" radius={[2, 2, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </Paper>
+                  </Box>
+
+                  {/* Capacity vs Efficiency Scatter */}
+                  <Box sx={{ flex: 1 }}>
+                    <Paper sx={{ p: 3, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
+                        Capacity vs Efficiency
+                      </Typography>
+                      <Box sx={{ height: 350 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ScatterChart 
+                            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis 
+                              type="number" 
+                              dataKey="gross_capacity_mw" 
+                              name="Capacity"
+                              stroke="#666"
+                              fontSize={12}
+                              label={{ value: 'Capacity (MW)', position: 'insideBottom', offset: -10 }}
+                            />
+                            <YAxis 
+                              type="number" 
+                              dataKey="unit_efficiency" 
+                              name="Efficiency"
+                              stroke="#666"
+                              fontSize={12}
+                              label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft' }}
+                            />
+                            <Tooltip 
+                              cursor={{ strokeDasharray: '3 3' }}
+                              contentStyle={{ 
+                                backgroundColor: '#fff', 
+                                border: '1px solid #ddd',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                              }}
+                              formatter={(value, name) => [value, name === 'gross_capacity_mw' ? 'Capacity (MW)' : 'Efficiency (%)']}
+                            />
+                            <Scatter 
+                              name="Units" 
+                              data={filteredDiagramData.filter(item => item.unit_efficiency && item.unit_efficiency > 0 && item.gross_capacity_mw && item.gross_capacity_mw > 0)}
+                              fill="#8884d8" 
+                            />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </Paper>
+                  </Box>
+                </Stack>
+              </Box>
+            </Stack>
+          )}
+        </Box>
       )}
       {activeTab === 'map' && (
-        <div style={{ background: 'var(--color-light)', borderRadius: 8, padding: 24 }}>
-          <h2 style={{ marginBottom: 16 }}>Map Visualization</h2>
-          <div style={{ marginBottom: 16, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <select value={companyFilter} onChange={e => setCompanyFilter(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Companies</option>
-              {companies.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Regions</option>
-              {regions.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-            <select value={techFilter} onChange={e => setTechFilter(e.target.value)} style={{ padding: 6, borderRadius: 6, minWidth: 120 }}>
-              <option value=''>All Technologies</option>
-              {techs.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+        <Box sx={{ background: 'var(--color-light)', borderRadius: 2, p: 3, minHeight: 400 }}>
+          <Typography variant="h5" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
+            Map Visualization
+          </Typography>
+          
+          {/* Map Filters Section */}
+          <Paper sx={{ p: 2, mb: 3, bgcolor: '#f8f9fa', borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#333' }}>Filters</Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} flexWrap="wrap">
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Company</InputLabel>
+                <Select
+                  value={companyFilter}
+                  label="Company"
+                  onChange={(e) => setCompanyFilter(e.target.value)}
+                >
+                  <MenuItem value="">All Companies</MenuItem>
+                  {companies.map(c => (
+                    <MenuItem key={c} value={c}>{c}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Region</InputLabel>
+                <Select
+                  value={regionFilter}
+                  label="Region"
+                  onChange={(e) => setRegionFilter(e.target.value)}
+                >
+                  <MenuItem value="">All Regions</MenuItem>
+                  {regions.map(r => (
+                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Technology</InputLabel>
+                <Select
+                  value={techFilter}
+                  label="Technology"
+                  onChange={(e) => setTechFilter(e.target.value)}
+                >
+                  <MenuItem value="">All Technologies</MenuItem>
+                  {techs.map(t => (
+                    <MenuItem key={t} value={t}>{t}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+          </Paper>
           {loadingMap && <div>Loading map...</div>}
           {errorMap && <div style={{ color: 'red' }}>{errorMap}</div>}
           <div style={{ height: MAP_HEIGHT, width: '100%', margin: '1rem 0', borderRadius: 8, overflow: 'hidden' }}>
@@ -829,7 +854,7 @@ const Dashboard: React.FC = () => {
               })}
             </MapContainer>
           </div>
-        </div>
+          </Box>
       )}
     </div>
   );

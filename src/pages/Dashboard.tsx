@@ -65,6 +65,7 @@ type TabType = typeof TABS[number]['key'];
 interface KPIRow {
   plant_id: number;
   plant_name: string;
+  company_name: string | null;
   unit_id: number;
   unit_name: string;
   technology_type: string | null;
@@ -108,10 +109,11 @@ const Dashboard: React.FC = () => {
 
   // Diagrammatic tab state
   const [diagramCompany, setDiagramCompany] = useState('');
+  const [diagramPlant, setDiagramPlant] = useState('');
   const [diagramRegion, setDiagramRegion] = useState('');
   const [diagramCity, setDiagramCity] = useState('');
   const [diagramTech, setDiagramTech] = useState('');
-  const [diagramYear, setDiagramYear] = useState('');
+  // const [diagramYear, setDiagramYear] = useState('');
   const [diagramData, setDiagramData] = useState<any[]>([]);
   const [diagramLoading, setDiagramLoading] = useState(false);
   const [diagramError, setDiagramError] = useState('');
@@ -165,6 +167,11 @@ const Dashboard: React.FC = () => {
   const columnDefs: ColDef<KPIRow>[] = [
     { 
       headerName: 'Company', 
+      field: 'company_name', 
+      minWidth: 120 
+    },
+    { 
+      headerName: 'Plant', 
       field: 'plant_name', 
       minWidth: 120 
     },
@@ -330,7 +337,7 @@ const Dashboard: React.FC = () => {
     (!techFilter || (u.technology_type && u.technology_type.toLowerCase().includes(techFilter.toLowerCase())))
   );
   // Unique filter options for map
-  const companies = Array.from(new Set([...plants.map(p => p.company), ...units.map(u => u.company)].filter(Boolean)));
+  const companies = Array.from(new Set([ ...units.map(u => u.company)].filter(Boolean)));
   const regions = Array.from(new Set([...plants.map(p => p.region), ...units.map(u => u.region)].filter(Boolean)));
   const techs = Array.from(new Set(units.map(u => u.technology_type).filter(Boolean)));
 
@@ -364,22 +371,23 @@ const Dashboard: React.FC = () => {
       fetchDiagramData();
     }
   }, [activeTab, fetchDiagramData]);
-
   // Filtered data for diagrams - Fixed to use actual available options
   const filteredDiagramData = diagramData.filter(row =>
-    (!diagramCompany || row.plant_name === diagramCompany) &&
+    (!diagramCompany || row.company_name === diagramCompany) &&
+    (!diagramPlant || row.plant_name === diagramPlant) &&
     (!diagramRegion || row.region === diagramRegion) &&
     (!diagramCity || row.city === diagramCity) &&
-    (!diagramTech || row.technology_type === diagramTech) &&
-    (!diagramYear || (row.year_operation_started && row.year_operation_started.toString() === diagramYear))
+    (!diagramTech || row.technology_type === diagramTech)
+    // (!diagramYear || (row.year_operation_started && row.year_operation_started.toString() === diagramYear))
   );
 
   // Get unique filter options from actual KPI data
-  const diagramCompanies = Array.from(new Set(diagramData.map(r => r.plant_name).filter(Boolean)));
+  const diagramCompanies = Array.from(new Set(diagramData.map(r => r.company_name).filter(Boolean)));
+  const diagramPlants = Array.from(new Set(diagramData.map(r => r.plant_name).filter(Boolean)));
   const diagramRegions = Array.from(new Set(diagramData.map(r => r.region).filter(Boolean)));
   const diagramCities = Array.from(new Set(diagramData.map(r => r.city).filter(Boolean)));
   const diagramTechs = Array.from(new Set(diagramData.map(r => r.technology_type).filter(Boolean)));
-  const diagramYears = Array.from(new Set(diagramData.map(r => r.year_operation_started).filter(Boolean)));
+  // const diagramYears = Array.from(new Set(diagramData.map(r => r.year_operation_started).filter(Boolean)));
 
   const agGridCustomStyles = `
 .ag-theme-alpine.custom-aggrid {
@@ -533,6 +541,20 @@ const Dashboard: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
+
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Plants</InputLabel>
+                  <Select
+                    value={diagramPlant}
+                    label="Company"
+                    onChange={(e) => setDiagramPlant(e.target.value)}
+                  >
+                    <MenuItem value="">All Plants</MenuItem>
+                    {diagramPlants.map(c => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 
                 <FormControl size="small" sx={{ minWidth: 150 }}>
                   <InputLabel>Region</InputLabel>
@@ -576,7 +598,7 @@ const Dashboard: React.FC = () => {
                   </Select>
                 </FormControl>
                 
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+                {/* <FormControl size="small" sx={{ minWidth: 150 }}>
                   <InputLabel>Operation Year</InputLabel>
                   <Select
                     value={diagramYear}
@@ -588,7 +610,7 @@ const Dashboard: React.FC = () => {
                       <MenuItem key={y} value={y}>{y}</MenuItem>
                     ))}
                   </Select>
-                </FormControl>
+                </FormControl> */}
               </Stack>
             </Paper>
           </Box>
@@ -649,13 +671,13 @@ const Dashboard: React.FC = () => {
 
               {/* Performance & Efficiency Analysis Section */}
               <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 2, p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, color: '#333', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
                   Performance & Efficiency Analysis
                 </Typography>
                 <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ alignItems: 'stretch' }}>
                   {/* Fuel Consumption Analysis */}
                   <Box sx={{ flex: 1 }}>
-                    <Paper sx={{ p: 3, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
+                    <Paper sx={{ p: 1, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
                       <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
                         Fuel Consumption vs Generation
                       </Typography>
@@ -699,7 +721,7 @@ const Dashboard: React.FC = () => {
 
                   {/* Capacity vs Efficiency Scatter */}
                   <Box sx={{ flex: 1 }}>
-                    <Paper sx={{ p: 3, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
+                    <Paper sx={{ p: 1, height: '100%', bgcolor: '#fff', boxShadow: 2 }}>
                       <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
                         Capacity vs Efficiency
                       </Typography>
@@ -769,9 +791,10 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => setCompanyFilter(e.target.value)}
                 >
                   <MenuItem value="">All Companies</MenuItem>
-                  {companies.map(c => (
-                    <MenuItem key={c} value={c}>{c}</MenuItem>
-                  ))}
+                  {companies.map(c => {
+                    console.log(c)
+                  return  <MenuItem key={c} value={c}>{c}</MenuItem>
+                  })}
                 </Select>
               </FormControl>
               

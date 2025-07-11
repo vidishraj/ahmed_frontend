@@ -33,7 +33,7 @@ const CompanyOverview: React.FC<CompanyOverviewProps> = ({ data }) => {
   // Extract unique companies and aggregate data
   const companyMap = new Map();
   safeData.forEach(item => {
-    const company = item.plant_name || 'Unknown';
+    const company = item.company_name || 'Unknown';
     if (!companyMap.has(company)) {
       companyMap.set(company, {
         company,

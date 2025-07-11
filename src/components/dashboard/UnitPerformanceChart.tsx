@@ -101,9 +101,6 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
       efficiency: unit.unit_efficiency || 0
     }));
 
-  // Modern color palette for performance
-  // const COLORS = ['#1976d2', '#388e3c', '#f57c00', '#d32f2f', '#7b1fa2', '#00796b'];
-
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3, color: '#1976d2', fontWeight: 700 }}>
@@ -119,38 +116,46 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
       ) : (
         <Stack spacing={4}>
           {/* Summary Cards */}
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <Card sx={{ flex: 1, bgcolor: '#e3f2fd', borderLeft: '4px solid #1976d2' }}>
-              <CardContent>
-                <Typography variant="h6" color="#1976d2">Total Units</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                  {data.length}
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card sx={{ flex: 1, bgcolor: '#e8f5e8', borderLeft: '4px solid #388e3c' }}>
-              <CardContent>
-                <Typography variant="h6" color="#388e3c">Avg Efficiency</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#388e3c' }}>
-                  {efficiencyData.length > 0 
-                    ? (efficiencyData.reduce((sum, item) => sum + item.efficiency, 0) / efficiencyData.length).toFixed(1)
-                    : '0'
-                  }%
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card sx={{ flex: 1, bgcolor: '#fff3e0', borderLeft: '4px solid #f57c00' }}>
-              <CardContent>
-                <Typography variant="h6" color="#f57c00">Avg Capacity Factor</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#f57c00' }}>
-                  {capacityFactorData.length > 0 
-                    ? (capacityFactorData.reduce((sum, item) => sum + item.capacity_factor, 0) / capacityFactorData.length).toFixed(1)
-                    : '0'
-                  }%
-                </Typography>
-              </CardContent>
-            </Card>
-          </Stack>
+          <Box sx={{ flexGrow: 1, mb: 2 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ flex: '1 1 250px', minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#e3f2fd', borderLeft: '4px solid #1976d2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#1976d2">Total Units</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#1976d2', wordBreak: 'break-word' }}>
+                      {data.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+              <div style={{ flex: '1 1 250px',  minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#e8f5e8', borderLeft: '4px solid #388e3c', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#388e3c">Avg Efficiency</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#388e3c', wordBreak: 'break-word' }}>
+                      {efficiencyData.length > 0 
+                        ? (efficiencyData.reduce((sum, item) => sum + item.efficiency, 0) / efficiencyData.length).toFixed(1)
+                        : '0'
+                      }%
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+              <div style={{ flex: '1 1 250px',  minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#fff3e0', borderLeft: '4px solid #f57c00', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#f57c00">Avg Capacity Factor</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#f57c00', wordBreak: 'break-word' }}>
+                      {capacityFactorData.length > 0 
+                        ? (capacityFactorData.reduce((sum, item) => sum + item.capacity_factor, 0) / capacityFactorData.length).toFixed(1)
+                        : '0'
+                      }%
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </Box>
 
           {/* Charts Grid */}
           <Stack spacing={3}>
@@ -308,4 +313,4 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
   );
 };
 
-export default UnitPerformanceChart; 
+export default UnitPerformanceChart;

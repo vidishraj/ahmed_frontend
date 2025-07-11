@@ -104,9 +104,10 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
   //   }));
 
   // Calculate summary statistics
-  const totalSO2 = safeData.reduce((sum, item) => sum + (item.so2_emissions_intensity || 0), 0);
-  const totalNO2 = safeData.reduce((sum, item) => sum + (item.no2_emissions_intensity || 0), 0);
-  const totalPM = safeData.reduce((sum, item) => sum + (item.pm_emissions_intensity || 0), 0);
+  console.log(safeData)
+  const totalSO2 = safeData.reduce((sum, item) => sum + (item.so2_emissions || 0), 0);
+  const totalNO2 = safeData.reduce((sum, item) => sum + (item.no2_emissions || 0), 0);
+  const totalPM = safeData.reduce((sum, item) => sum + (item.pm10_emissions || 0), 0);
 
   // Modern color palette for emissions
   // const COLORS = ['#d32f2f', '#f57c00', '#388e3c', '#1976d2', '#7b1fa2', '#00796b'];

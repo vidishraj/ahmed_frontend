@@ -29,14 +29,16 @@ header, footer {
   gap: 1.5rem;
 }
 
-.header-nav a, .footer-nav a {
+.header-nav a, .footer-nav a, .policy-files-link {
   color: var(--color-lightest);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
+  display: flex;
+  align-items: center;
 }
 
-.header-nav a:hover, .footer-nav a:hover {
+.header-nav a:hover, .footer-nav a:hover, .policy-files-link:hover {
   color: var(--color-light);
 }
 

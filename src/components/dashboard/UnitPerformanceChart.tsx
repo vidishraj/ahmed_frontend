@@ -266,7 +266,7 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
             </Card>
 
             {/* Generation vs Capacity Analysis */}
-            <Card sx={{ bgcolor: '#fff', boxShadow: 3 }}>
+            {/* <Card sx={{ bgcolor: '#fff', boxShadow: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: '#333', fontWeight: 600 }}>
                   Annual Generation vs Capacity Relationship
@@ -305,7 +305,7 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
                   </ResponsiveContainer>
                 </Box>
               </CardContent>
-            </Card>
+            </Card> */}
           </Stack>
         </Stack>
       )}

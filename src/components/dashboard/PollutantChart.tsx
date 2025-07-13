@@ -127,32 +127,40 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
       ) : (
         <Stack spacing={4}>
           {/* Summary Cards */}
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <Card sx={{ flex: 1, bgcolor: '#ffebee', borderLeft: '4px solid #d32f2f' }}>
-              <CardContent>
-                <Typography variant="h6" color="#d32f2f">Total SO₂ Emissions</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                  {totalSO2.toFixed(1)} tons
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card sx={{ flex: 1, bgcolor: '#fff8e1', borderLeft: '4px solid #f57c00' }}>
-              <CardContent>
-                <Typography variant="h6" color="#f57c00">Total NO₂ Emissions</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#f57c00' }}>
-                  {totalNO2.toFixed(1)} tons
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card sx={{ flex: 1, bgcolor: '#f3e5f5', borderLeft: '4px solid #7b1fa2' }}>
-              <CardContent>
-                <Typography variant="h6" color="#7b1fa2">Total PM Emissions</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#7b1fa2' }}>
-                  {totalPM.toFixed(1)} tons
-                </Typography>
-              </CardContent>
-            </Card>
-          </Stack>
+          <Box sx={{ flexGrow: 1, mb: 2 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ flex: '1 1 250px', minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#ffebee', borderLeft: '4px solid #d32f2f', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#d32f2f">Total SO₂ Emissions</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#d32f2f', wordBreak: 'break-word' }}>
+                      {totalSO2.toFixed(1)} tons
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+              <div style={{ flex: '1 1 250px', minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#fff8e1', borderLeft: '4px solid #f57c00', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#f57c00">Total NO₂ Emissions</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#f57c00', wordBreak: 'break-word' }}>
+                      {totalNO2.toFixed(1)} tons
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+              <div style={{ flex: '1 1 250px', minWidth: "fit-content", maxWidth: 'fit-content' }}>
+                <Card sx={{ height: '100%', bgcolor: '#f3e5f5', borderLeft: '4px solid #7b1fa2', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="#7b1fa2">Total PM Emissions</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: '#7b1fa2', wordBreak: 'break-word' }}>
+                      {totalPM.toFixed(1)} tons
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </Box>
 
           {/* Charts Grid */}
           <Stack spacing={3}>

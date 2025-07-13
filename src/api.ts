@@ -237,9 +237,42 @@ export const fetchKPIList = async (
   return response.json();
 };
 
+// User management functions
+export const createUser = async (userData: { email: string; password: string; role: string; displayName?: string }, token: string) => {
+  const response = await fetch(`${BASE_URL}/api/user-management/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to create user');
+  }
+
+  return response.json();
+};
+
+export const deleteUser = async (uid: string, token: string) => {
+  const response = await fetch(`${BASE_URL}/api/user-management/${uid}/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Failed to delete user');
+  }
+};
+
 // New endpoints for diagram data
 export async function fetchCompanyStats(token?: string): Promise<CompanyStats> {
-  return apiRequest('/api/stats/companies', { method: 'GET' }, token);
+  return apiRequest('/api/companies/stats/', { method: 'GET' }, token);
 }
 
 export async function fetchEnvironmentalData(token?: string): Promise<EnvironmentalData[]> {
@@ -282,3 +315,99 @@ export async function fetchComprehensiveSummary(
   const url = `/api/summary/comprehensive${params.toString() ? `?${params.toString()}` : ''}`;
   return apiRequest(url, { method: 'GET' }, token);
 } 
+
+// Policy File interfaces
+export interface PolicyFile {
+  id: number;
+  name: string;
+  original_filename: string;
+  file_size: number;
+  uploaded_by: string;
+  upload_date: string;
+}
+
+// Policy File API functions
+export const uploadPolicyFile = async (file: File, name: string, token: string): Promise<any> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', name);
+  
+  const response = await fetch(`${BASE_URL}/api/policy-files/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to upload policy file');
+  }
+
+  return response.json();
+};
+
+export const fetchPolicyFiles = async (token: string): Promise<PolicyFile[]> => {
+  const response = await fetch(`${BASE_URL}/api/policy-files/list/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to fetch policy files');
+  }
+
+  return response.json();
+};
+
+export const downloadPolicyFile = async (fileId: number, token: string): Promise<void> => {
+  const response = await fetch(`${BASE_URL}/api/policy-files/download/${fileId}/`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to download policy file');
+  }
+
+  // Get filename from response headers
+  const contentDisposition = response.headers.get('Content-Disposition');
+  const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'policy_file';
+
+  // Create blob and download
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};
+
+export const deletePolicyFile = async (fileId: number, token: string): Promise<any> => {
+  const response = await fetch(`${BASE_URL}/api/policy-files/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ file_id: fileId }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to delete policy file');
+  }
+
+  return response.json();
+}; 

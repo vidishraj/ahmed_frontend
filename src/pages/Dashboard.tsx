@@ -14,6 +14,7 @@ import PollutantChart from '../components/dashboard/PollutantChart';
 import UnitPerformanceChart from '../components/dashboard/UnitPerformanceChart';
 import WaterWasteChart from '../components/dashboard/WaterWasteChart';
 import SummaryTab from '../components/dashboard/SummaryTab';
+import EmissionsComplianceChart from '../components/dashboard/EmissionsComplianceChart';
 import { Box, Paper, Stack, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 import { AgGridReact } from 'ag-grid-react';
@@ -648,6 +649,11 @@ const Dashboard: React.FC = () => {
                   <PollutantChart data={filteredDiagramData} />
                 </Box>
               </Stack>
+
+              {/* New Emissions Compliance Chart */}
+              <Box sx={{ bgcolor: '#f8f9fa', borderRadius: 2, p: 2 }}>
+                <EmissionsComplianceChart data={filteredDiagramData} />
+              </Box>
 
               {/* Environmental Monitoring Section - Only show if data exists */}
               {(environmentalData.length > 0 || emergencyData.length > 0) && (

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Paper, Stack, Card, CardContent } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ScatterChart, Scatter
+  ResponsiveContainer
 } from 'recharts';
 
 interface UnitPerformanceChartProps {
@@ -90,16 +90,6 @@ const UnitPerformanceChart: React.FC<UnitPerformanceChartProps> = ({ data }) => 
     unit_count: tech.unit_count
   }));
 
-  // Generation vs Capacity analysis
-  const generationVsCapacity = safeData
-    .filter(unit => unit.gross_capacity_mw > 0 && unit.annual_generation_mwh > 0)
-    .map(unit => ({
-      capacity: unit.gross_capacity_mw,
-      generation: unit.annual_generation_mwh,
-      unit: `${unit.plant_name} - ${unit.unit_name}`,
-      technology: unit.technology_type,
-      efficiency: unit.unit_efficiency || 0
-    }));
 
   return (
     <Box>

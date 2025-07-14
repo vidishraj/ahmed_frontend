@@ -70,6 +70,7 @@ interface KPIRow {
   unit_id: number;
   unit_name: string;
   technology_type: string | null;
+  fuel_type: string | null;
   region: string | null;
   city: string | null;
   year_operation_started: number | null;
@@ -114,6 +115,7 @@ const Dashboard: React.FC = () => {
   const [diagramRegion, setDiagramRegion] = useState('');
   const [diagramCity, setDiagramCity] = useState('');
   const [diagramTech, setDiagramTech] = useState('');
+  const [diagramFuel, setDiagramFuel] = useState('');
   // const [diagramYear, setDiagramYear] = useState('');
   const [diagramData, setDiagramData] = useState<any[]>([]);
   const [diagramLoading, setDiagramLoading] = useState(false);
@@ -198,6 +200,16 @@ const Dashboard: React.FC = () => {
       field: 'unit_efficiency', 
       minWidth: 150,
       valueFormatter: (params) => params.value ? params.value.toFixed(2) : '-'
+    },
+    { 
+      headerName: 'Technology Type', 
+      field: 'technology_type', 
+      minWidth: 150 
+    },
+    { 
+      headerName: 'Fuel Type', 
+      field: 'fuel_type', 
+      minWidth: 150 
     },
     { 
       headerName: 'Capacity Factor (%)', 
@@ -378,7 +390,8 @@ const Dashboard: React.FC = () => {
     (!diagramPlant || row.plant_name === diagramPlant) &&
     (!diagramRegion || row.region === diagramRegion) &&
     (!diagramCity || row.city === diagramCity) &&
-    (!diagramTech || row.technology_type === diagramTech)
+    (!diagramTech || row.technology_type === diagramTech) &&
+    (!diagramFuel || row.fuel_type === diagramFuel)
     // (!diagramYear || (row.year_operation_started && row.year_operation_started.toString() === diagramYear))
   );
 
@@ -388,6 +401,7 @@ const Dashboard: React.FC = () => {
   const diagramRegions = Array.from(new Set(diagramData.map(r => r.region).filter(Boolean)));
   const diagramCities = Array.from(new Set(diagramData.map(r => r.city).filter(Boolean)));
   const diagramTechs = Array.from(new Set(diagramData.map(r => r.technology_type).filter(Boolean)));
+  const diagramFuels = Array.from(new Set(diagramData.map(r => r.fuel_type).filter(Boolean)));
   // const diagramYears = Array.from(new Set(diagramData.map(r => r.year_operation_started).filter(Boolean)));
 
   const agGridCustomStyles = `
@@ -595,6 +609,20 @@ const Dashboard: React.FC = () => {
                     <MenuItem value="">All Technologies</MenuItem>
                     {diagramTechs.map(t => (
                       <MenuItem key={t} value={t}>{t}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Fuel Type</InputLabel>
+                  <Select
+                    value={diagramFuel}
+                    label="Fuel Type"
+                    onChange={(e) => setDiagramFuel(e.target.value)}
+                  >
+                    <MenuItem value="">All Fuel Types</MenuItem>
+                    {diagramFuels.map(f => (
+                      <MenuItem key={f} value={f}>{f}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>

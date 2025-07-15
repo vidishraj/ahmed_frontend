@@ -196,10 +196,21 @@ const Header: React.FC = () => {
                     policyFiles.map((file) => (
                       <MenuItem key={file.id} sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 0.5 }}>
-                          <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              flex: 1, 
+                              fontWeight: 500,
+                              maxWidth: '180px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={file.name} // This adds the tooltip
+                          >
                             {file.name}
                           </Typography>
-                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
                             <IconButton
                               size="small"
                               onClick={() => handleDownload(file.id)}

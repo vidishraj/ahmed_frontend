@@ -239,7 +239,7 @@ export const fetchKPIList = async (
 
 // User management functions
 export const createUser = async (userData: { email: string; password: string; role: string; displayName?: string }, token: string) => {
-  const response = await fetch(`${BASE_URL}/api/user-management/`, {
+  const response = await fetch(`${BASE_URL}/api/users/create/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -257,7 +257,7 @@ export const createUser = async (userData: { email: string; password: string; ro
 };
 
 export const deleteUser = async (uid: string, token: string) => {
-  const response = await fetch(`${BASE_URL}/api/user-management/${uid}/`, {
+  const response = await fetch(`${BASE_URL}/api/users/delete/${uid}/`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,

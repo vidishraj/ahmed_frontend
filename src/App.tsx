@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import RoleManagement from './pages/RoleManagement';
+import PolicyFiles from './pages/PolicyFiles';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -28,6 +29,7 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/upload" element={<PrivateRoute><Upload /></PrivateRoute>} />
               <Route path="/role-management" element={<PrivateRoute><RoleManagement /></PrivateRoute>} />
+              <Route path="/policy-files" element={<PrivateRoute><PolicyFiles /></PrivateRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Navigate to="/dashboard" />} />
             </Routes>

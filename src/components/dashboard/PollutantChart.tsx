@@ -68,7 +68,7 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
     acc[tech].total_no2 += unit.env_load_no2 || 0;
     acc[tech].unit_count += 1;
     return acc;
-  }, {});
+}, {});
 
   const techEmissionsData = Object.values(emissionsByTech);
 
@@ -104,7 +104,7 @@ const PollutantChart: React.FC<PollutantChartProps> = ({ data }) => {
   //   }));
 
   // Calculate summary statistics
-  console.log(safeData)
+  
   const totalSO2 = safeData.reduce((sum, item) => sum + (item.so2_emissions || 0), 0);
   const totalNO2 = safeData.reduce((sum, item) => sum + (item.no2_emissions || 0), 0);
   const totalPM = safeData.reduce((sum, item) => sum + (item.pm10_emissions || 0), 0);

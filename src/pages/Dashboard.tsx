@@ -341,7 +341,7 @@ const Dashboard: React.FC = () => {
 
   // Filtering logic for map
   const filteredPlants = plants.filter(p =>
-    (!companyFilter || (p.company && p.company.toLowerCase().includes(companyFilter.toLowerCase()))) &&
+    (!companyFilter || (p.name && p.name.toLowerCase().includes(companyFilter.toLowerCase()))) &&
     (!regionFilter || (p.region && p.region.toLowerCase().includes(regionFilter.toLowerCase())))
   );
   const filteredUnits = units.filter(u =>
@@ -822,13 +822,12 @@ const Dashboard: React.FC = () => {
                 <Select
                   value={companyFilter}
                   label="Company"
-                  onChange={(e) => setCompanyFilter(e.target.value)}
+                  onChange={(e) => {setCompanyFilter(e.target.value); console.log(companies)}}
                 >
                   <MenuItem value="">All Companies</MenuItem>
-                  {companies.map(c => {
-                    console.log(c)
-                  return  <MenuItem key={c} value={c}>{c}</MenuItem>
-                  })}
+                  {companies.map(c => (
+                    <MenuItem key={c} value={c}>{c}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               

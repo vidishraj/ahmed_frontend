@@ -132,6 +132,17 @@ const PolicyFiles: React.FC = () => {
             startIcon={<Refresh />}
             onClick={loadPolicyFiles}
             disabled={loading}
+            sx={{
+              borderColor: '#b8e3cb',
+              color: '#266541',
+              fontWeight: 600,
+              bgcolor: '#effaf5',
+              '&:hover': {
+                borderColor: '#86b29a',
+                bgcolor: '#b8e3cb',
+                color: '#266541',
+              },
+            }}
           >
             Refresh
           </Button>
@@ -141,6 +152,15 @@ const PolicyFiles: React.FC = () => {
               startIcon={<Add />}
               onClick={() => setUploadDialogOpen(true)}
               disabled={policyFiles.length >= 10}
+              sx={{
+                bgcolor: '#266541',
+                color: '#effaf5',
+                fontWeight: 600,
+                '&:hover': {
+                  bgcolor: '#1a4a2f',
+                  color: '#effaf5',
+                },
+              }}
             >
               Upload New File
             </Button>

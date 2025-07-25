@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (user) navigate('/dashboard');
+    if (user) navigate('/home');
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,12 +20,12 @@ const Login: React.FC = () => {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
-    } finally {
-      setSubmitting(false);
+      setSubmitting(false); // Re-enable the button on error
     }
+    // Note: setSubmitting(false) is not called on success because the user will be redirected
   };
 
   return (

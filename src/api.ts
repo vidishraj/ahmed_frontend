@@ -153,7 +153,6 @@ export async function apiRequest<T = any>(
       ...options,
       headers,
     });
-    console.log(res)
     return res.data;
   } catch (err: any) {
     let errorMsg = 'API request failed';
@@ -380,18 +379,37 @@ export const downloadPolicyFile = async (fileId: number, token: string): Promise
 
   // Get filename from response headers
   const contentDisposition = response.headers.get('Content-Disposition');
-  const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'policy_file';
+  let filename = 'policy_file';
+  
+  if (contentDisposition) {
+    // Try multiple filename extraction patterns
+    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    if (filenameMatch && filenameMatch[1]) {
+      filename = filenameMatch[1].replace(/['"]/g, '');
+    }
+  }
 
-  // Create blob and download
+  // Get content type from response
+  const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+
+  // Create blob with the correct content type
   const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
+  const blobWithType = new Blob([blob], { type: contentType });
+  
+  // Create download link
+  const url = window.URL.createObjectURL(blobWithType);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(a);
+  
+  // Cleanup
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }, 100);
 };
 
 export const deletePolicyFile = async (fileId: number, token: string): Promise<any> => {

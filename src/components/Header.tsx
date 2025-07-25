@@ -23,6 +23,7 @@ const Header: React.FC = () => {
   };
 
   const navLinks: NavLink[] = [
+    { to: '/home', label: 'Home', show: !!user },
     { to: '/dashboard', label: 'Dashboard', show: !!user },
     { to: '/upload', label: 'Upload Data', show: user?.role === 'admin' || user?.role === 'superadmin' },
     { to: '/role-management', label: 'Role Management', show: user?.role === 'superadmin' },
@@ -31,13 +32,13 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header style={{ background: 'var(--color-darkest)', color: 'var(--color-lightest)', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <header style={{ borderBottom:'1px solid #86b29a', background: 'var(--color-darkest)', color: 'var(--color-lightest)', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <img src={logo} alt="NCEC Logo" style={{ height: 40, marginRight: 15 }} />
-        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>NCEC Environmental Dashboard</h1>
+        <img src={logo} alt="NCEC Logo" style={{ height: 40, marginRight: 15, borderRadius: '50%' }} />
+        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>NCEC-DOE</h1>
       </div>
       <nav>
-        <ul style={{ display: 'flex', listStyle: 'none', margin: 0, padding: 0, gap: '1.5rem' }}>
+        <ul style={{ display: 'flex', listStyle: 'none', margin: 0, padding: 0, gap: '1.5rem', alignItems: 'center' }}>
           {navLinks
             .filter(link => link.show)
             .map(link => (

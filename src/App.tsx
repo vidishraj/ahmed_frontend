@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import RoleManagement from './pages/RoleManagement';
@@ -26,12 +27,13 @@ const App: React.FC = () => {
           <Header />
           <main>
             <Routes>
+              <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
               <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/upload" element={<PrivateRoute><Upload /></PrivateRoute>} />
               <Route path="/role-management" element={<PrivateRoute><RoleManagement /></PrivateRoute>} />
               <Route path="/policy-files" element={<PrivateRoute><PolicyFiles /></PrivateRoute>} />
               <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/" element={<Navigate to="/home" />} />
             </Routes>
           </main>
           <Footer />

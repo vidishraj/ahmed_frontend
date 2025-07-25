@@ -380,12 +380,18 @@ export const downloadPolicyFile = async (fileId: number, token: string): Promise
   // Get filename from response headers
   const contentDisposition = response.headers.get('Content-Disposition');
   let filename = 'policy_file';
-  
+
   if (contentDisposition) {
-    // Try multiple filename extraction patterns
-    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-    if (filenameMatch && filenameMatch[1]) {
-      filename = filenameMatch[1].replace(/['"]/g, '');
+    // Prefer filename* (RFC 5987)
+    const filenameStarMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]+)/);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      filename = decodeURIComponent(filenameStarMatch[1]);
+    } else {
+      // Fallback to filename
+      const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
     }
   }
 
